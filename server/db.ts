@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, clientes, fornecedores, produtos, pedidos, Cliente, Fornecedor, Produto, Pedido, InsertCliente, InsertFornecedor, InsertProduto, InsertPedido } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,100 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function criarCliente(usuarioId: number, dados: Omit<InsertCliente, 'usuarioId'>): Promise<Cliente | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const resultado = await db.insert(clientes).values({ ...dados, usuarioId });
+  const id = resultado[0].insertId;
+  const cliente = await db.select().from(clientes).where(eq(clientes.id, Number(id))).limit(1);
+  return cliente.length > 0 ? cliente[0] : null;
+}
+
+export async function obterClientePorUsuarioId(usuarioId: number): Promise<Cliente | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const resultado = await db.select().from(clientes).where(eq(clientes.usuarioId, usuarioId)).limit(1);
+  return resultado.length > 0 ? resultado[0] : null;
+}
+
+export async function criarFornecedor(usuarioId: number, dados: Omit<InsertFornecedor, 'usuarioId'>): Promise<Fornecedor | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const resultado = await db.insert(fornecedores).values({ ...dados, usuarioId });
+  const id = resultado[0].insertId;
+  const fornecedor = await db.select().from(fornecedores).where(eq(fornecedores.id, Number(id))).limit(1);
+  return fornecedor.length > 0 ? fornecedor[0] : null;
+}
+
+export async function obterFornecedorPorUsuarioId(usuarioId: number): Promise<Fornecedor | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const resultado = await db.select().from(fornecedores).where(eq(fornecedores.usuarioId, usuarioId)).limit(1);
+  return resultado.length > 0 ? resultado[0] : null;
+}
+
+export async function obterFornecedorAtivo(): Promise<Fornecedor | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const resultado = await db.select().from(fornecedores).where(eq(fornecedores.ativo, true)).limit(1);
+  return resultado.length > 0 ? resultado[0] : null;
+}
+
+export async function criarProduto(dados: InsertProduto): Promise<Produto | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const resultado = await db.insert(produtos).values(dados);
+  const id = resultado[0].insertId;
+  const produto = await db.select().from(produtos).where(eq(produtos.id, Number(id))).limit(1);
+  return produto.length > 0 ? produto[0] : null;
+}
+
+export async function obterProdutosPorFornecedor(fornecedorId: number): Promise<Produto[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(produtos).where(and(eq(produtos.fornecedorId, fornecedorId), eq(produtos.ativo, true)));
+}
+
+export async function obterProdutoPorId(id: number): Promise<Produto | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const resultado = await db.select().from(produtos).where(eq(produtos.id, id)).limit(1);
+  return resultado.length > 0 ? resultado[0] : null;
+}
+
+export async function atualizarProduto(id: number, dados: Partial<Omit<Produto, 'id' | 'criadoEm'>>): Promise<Produto | null> {
+  const db = await getDb();
+  if (!db) return null;
+  await db.update(produtos).set(dados).where(eq(produtos.id, id));
+  const resultado = await db.select().from(produtos).where(eq(produtos.id, id)).limit(1);
+  return resultado.length > 0 ? resultado[0] : null;
+}
+
+export async function criarPedido(dados: InsertPedido): Promise<Pedido | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const resultado = await db.insert(pedidos).values(dados);
+  const id = resultado[0].insertId;
+  const pedido = await db.select().from(pedidos).where(eq(pedidos.id, Number(id))).limit(1);
+  return pedido.length > 0 ? pedido[0] : null;
+}
+
+export async function obterPedidosPorCliente(clienteId: number): Promise<Pedido[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(pedidos).where(eq(pedidos.clienteId, clienteId));
+}
+
+export async function obterPedidosPorFornecedor(fornecedorId: number): Promise<Pedido[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(pedidos).where(eq(pedidos.fornecedorId, fornecedorId));
+}
+
+export async function atualizarStatusPedido(id: number, status: string): Promise<Pedido | null> {
+  const db = await getDb();
+  if (!db) return null;
+  await db.update(pedidos).set({ status: status as any }).where(eq(pedidos.id, id));
+  const resultado = await db.select().from(pedidos).where(eq(pedidos.id, id)).limit(1);
+  return resultado.length > 0 ? resultado[0] : null;
+}

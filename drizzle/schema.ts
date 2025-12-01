@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { decimal, int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -25,4 +25,67 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+export const clientes = mysqlTable("clientes", {
+  id: int("id").autoincrement().primaryKey(),
+  usuarioId: int("usuarioId").notNull(),
+  telefone: varchar("telefone", { length: 20 }),
+  endereco: text("endereco"),
+  cidade: varchar("cidade", { length: 100 }),
+  estado: varchar("estado", { length: 2 }),
+  cep: varchar("cep", { length: 10 }),
+  criadoEm: timestamp("criadoEm").defaultNow().notNull(),
+  atualizadoEm: timestamp("atualizadoEm").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Cliente = typeof clientes.$inferSelect;
+export type InsertCliente = typeof clientes.$inferInsert;
+
+export const fornecedores = mysqlTable("fornecedores", {
+  id: int("id").autoincrement().primaryKey(),
+  usuarioId: int("usuarioId").notNull(),
+  nomeEmpresa: varchar("nomeEmpresa", { length: 255 }).notNull(),
+  descricao: text("descricao"),
+  logo: text("logo"),
+  ativo: boolean("ativo").default(true).notNull(),
+  criadoEm: timestamp("criadoEm").defaultNow().notNull(),
+  atualizadoEm: timestamp("atualizadoEm").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Fornecedor = typeof fornecedores.$inferSelect;
+export type InsertFornecedor = typeof fornecedores.$inferInsert;
+
+export const produtos = mysqlTable("produtos", {
+  id: int("id").autoincrement().primaryKey(),
+  fornecedorId: int("fornecedorId").notNull(),
+  nome: varchar("nome", { length: 255 }).notNull(),
+  descricao: text("descricao"),
+  preco: int("preco").notNull(),
+  imagem: text("imagem"),
+  estoque: int("estoque").default(0).notNull(),
+  ativo: boolean("ativo").default(true).notNull(),
+  criadoEm: timestamp("criadoEm").defaultNow().notNull(),
+  atualizadoEm: timestamp("atualizadoEm").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Produto = typeof produtos.$inferSelect;
+export type InsertProduto = typeof produtos.$inferInsert;
+
+export const pedidos = mysqlTable("pedidos", {
+  id: int("id").autoincrement().primaryKey(),
+  clienteId: int("clienteId").notNull(),
+  fornecedorId: int("fornecedorId").notNull(),
+  produtoId: int("produtoId").notNull(),
+  quantidade: int("quantidade").notNull(),
+  precoUnitario: int("precoUnitario").notNull(),
+  precoTotal: int("precoTotal").notNull(),
+  status: mysqlEnum("status", ["pendente", "confirmado", "enviado", "entregue", "cancelado"]).default("pendente").notNull(),
+  nomeCliente: varchar("nomeCliente", { length: 255 }).notNull(),
+  emailCliente: varchar("emailCliente", { length: 320 }).notNull(),
+  telefoneCliente: varchar("telefoneCliente", { length: 20 }),
+  enderecoCliente: text("enderecoCliente"),
+  criadoEm: timestamp("criadoEm").defaultNow().notNull(),
+  atualizadoEm: timestamp("atualizadoEm").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Pedido = typeof pedidos.$inferSelect;
+export type InsertPedido = typeof pedidos.$inferInsert;
