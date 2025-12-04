@@ -33,6 +33,7 @@
 - [x] Endpoints de gerenciamento do fornecedor
 
 ## Deployment
-- [ ] Publicar repositório no GitHub
+- [x] Publicar repositório no GitHub
 - [ ] Configurar variáveis de ambiente
 - [ ] Documentar instruções de execução
+- [x] Popular banco com 5 camisas pré-definidas
